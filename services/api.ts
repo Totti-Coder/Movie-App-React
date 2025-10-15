@@ -8,10 +8,12 @@ export const TMDB_CONFIG = {
     }
 }
 
+const LANGUAGE_CODE = 'es-ES';
+
 export const fetchPopularMovies = async ({query}: { query: string}) => {
     const endpoint = query
-    ? `${TMDB_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
-    : `${TMDB_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc`
+    ? `${TMDB_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=${LANGUAGE_CODE}`
+    : `${TMDB_CONFIG.BASE_URL}/discover/movie?sort_by=popularity.desc&language=${LANGUAGE_CODE}`
 
 
     const response = await fetch(endpoint, {
