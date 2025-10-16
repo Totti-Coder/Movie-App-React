@@ -8,29 +8,20 @@ import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 
 const search = () => {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch solo cuando cambia searchQuery después de presionar Enter
+  // Fetch solo cuando hay texto en searchQuery
   useEffect(() => {
     const fetchMovies = async () => {
+      // Si no hay búsqueda, no hacer nada
       if (searchQuery === "") {
-        // Si no hay búsqueda, mostrar populares
-        setLoading(true);
-        try {
-          const data = await fetchPopularMovies({ query: "" });
-          setMovies(data);
-          setError(null);
-        } catch (err) {
-          setError(error);
-        } finally {
-          setLoading(false);
-        }
+        setMovies([]);
         return;
       }
+      
       // Búsqueda con query
       setLoading(true);
       try {
@@ -38,7 +29,7 @@ const search = () => {
         setMovies(data);
         setError(null);
       } catch (err) {
-        setError(error);
+        setError(err as Error);
       } finally {
         setLoading(false);
       }
@@ -74,11 +65,11 @@ const search = () => {
       <View className="px-5 mb-3">
         <Text className="text-lg text-white font-bold">
           {searchQuery === "" ? (
-            "Resultados para:"
+            ""
           ) : (
             <>
               Resultados para:{" "}
-              <Text className="text-[#ab8bff]">{searchQuery.toUpperCase()}</Text>
+              <Text className="text-accent">{searchQuery.toUpperCase()}</Text>
             </>
           )}
         </Text>
@@ -86,10 +77,38 @@ const search = () => {
 
       {loading ? (
         <ActivityIndicator size="large" color="#ab8bff" className="flex-1" />
+
       ) : error ? (
-        <Text className="text-white text-center mt-5 px-5">
+        <Text className="text-red-500 text-center px-5 my-3">
           Error: {error?.message}
         </Text>
+
+
+      ) : searchQuery !== "" && movies.length === 0 ? (
+        <View className="flex-1 justify-center items-center px-8 mb-32">
+          <Image
+            source={images.cruz}
+            className="mb-6"
+            resizeMode="contain"
+          />
+          <Text className="text-white text-center text-2xl font-bold mb-3">
+            Sin resultados
+          </Text>
+          <Text className="text-light-100 text-center text-base leading-6">
+            No encontramos películas o series con{"\n"}
+            <Text className="text-accent font-semibold">"{searchQuery}"</Text>
+          </Text>
+          <Text className="text-light-200 text-center text-sm mt-4">
+            Intenta con otro nombre
+          </Text>
+        </View>
+
+      ) : searchQuery === "" ? (
+        <View className="flex-1 justify-center items-center px-8">
+          <Text className="text-light-100 text-center text-lg mb-32">
+            Escribe en la barra de busqueda para encontrar películas o series
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={movies}
