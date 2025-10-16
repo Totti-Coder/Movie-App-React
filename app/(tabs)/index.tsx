@@ -1,23 +1,27 @@
-import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { Link } from "expo-router";
 import { ActivityIndicator, FlatList, Image, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import useFetch from "@/services/useFetch";
 import { fetchPopularMovies } from "@/services/api";
 import MovieCard from "@/components/MovieCard";
+import SearchBar from "@/components/SearchBar";
 
 
 export default function Index() {
-  const router = useRouter(); // hook que permite que nos podamos mover entre diferentes paginas o pantallas
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: movies,
     loading: moviesLoading,
     error: moviesError } = useFetch(() => fetchPopularMovies({
-      query: "" // Si la query esta vacia nos devuelve las peliculas mas populares
+      query: ""
     }))
 
+  const handleSearchFocus = () => {
+    router.push('/search'); 
+  };
 
   return (
     <View className="flex-1 bg-primary">
@@ -35,38 +39,36 @@ export default function Index() {
             className="mt-10 self-center"
           />
         ) : moviesError ? (
-          <Text>Error: {moviesError?.message}</Text>
+          <Text className="text-white">Error: {moviesError?.message}</Text>
         ) : (
           <View className="flex-1 mt-5">
             <SearchBar
-              onPress={() => router.push("/search")}
-              placeholder="Busca una pelicula"
+              placeholder="Buscar películas..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={handleSearchFocus} 
             />
 
             <>
               <Text className="text-lg text-white font-bold mt-5 mb-3">Ultimas Peliculas</Text>
               
               <FlatList
-              // Pasamos el array de movies como data a la Flatlist
                 data={movies}
-                // Como va a renderizar cada pelicula
                 renderItem={({ item }) => (
                   <MovieCard
-                  {...item}
+                    {...item}
                   />
                 )}
-                // Ayuda a react native a saber cuantos elementos son y donde estan posicionados
                 keyExtractor={(item) => item.id.toString()}
-                // Se ven en tres diferentes columnas
                 numColumns={3}
                 columnWrapperStyle={{
-                  justifyContent: "flex-start",
+                  justifyContent: "center",
                   gap: 20,
                   paddingRight: 5,
                   marginBottom: 10
                 }}
                 className="mt-2 pb-32"
-                scrollEnabled= {false}
+                scrollEnabled={false}
               />
             </>
           </View>

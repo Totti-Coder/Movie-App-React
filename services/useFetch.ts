@@ -37,7 +37,7 @@ useEffect(() => {
     if(autoFetch) {
         fetchData()
     }
-}, [])
+}, [fetchFunction])
 
 return { data, loading, error, refetch : fetchData, reset}
 }

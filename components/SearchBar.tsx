@@ -1,33 +1,32 @@
-import { View, TextInput, Image } from "react-native"; // ¡Añade TouchableOpacity!
+import { View, TextInput, Image } from "react-native"; 
 import React from "react";
 import { icons } from "@/constants/icons";
 
-// DEFINICIÓN DE LA INTERFAZ DE PROPS
+
 interface Props {
-  onPress?: () => void;
-  placeholder: string;
-  
+  placeholder: string
+  value: string
+  onChangeText: (text: string) => void
+  onSubmitEditing?: () => void
+  onFocus?: () => void
 }
 
-// Aplico la interfaz al componente
-const SearchBar = ({ onPress, placeholder }: Props) => {
+const SearchBar = ({ placeholder, value, onChangeText, onSubmitEditing, onFocus }: Props) => {
   return (
-    // Utilizo el prop onPress con TouchableOpacity
-    <View className="flex-row items-center bg-dark-200 rounded-full px-5 py-4">
-        <Image source={icons.search} className="size-5" resizeMode="contain" tintColor="ab8bff"/>
-        <TextInput
-        onPress={onPress}
-          placeholder={placeholder}
-          value=""
-          className="flex-1 ml-2 text-white"
-          onChangeText={() => {}}
-          placeholderTextColor="#a8b5db"
-        />
-      </View>
+    <View className="flex-row items-center bg-dark-100 rounded-full px-5 py-4">
+      <Image source={icons.search} className="size-5" resizeMode="contain" tintColor="ab8bff"/>
+      <TextInput
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        onFocus={onFocus}
+        className="flex-1 ml-2 text-white"
+        placeholderTextColor="#a8b5db"
+        returnKeyType="search" 
+      />
+    </View>
   );
 };
 
 export default SearchBar;
-
-
-
