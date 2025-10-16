@@ -1,46 +1,85 @@
 import { View, Text, Image, FlatList, ActivityIndicator } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { images } from "@/constants/images";
 import MovieCard from "@/components/MovieCard";
-import { useRouter } from "expo-router";
 import { fetchPopularMovies } from "@/services/api";
 import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
+import { updateSearchCount } from "@/services/appwrite";
 
 const search = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); //Lo que escribe cada usuario
+  const [submittedQuery, setSubmittedQuery] = useState(""); // Lo que se muestra después de darle a enter
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [lastSavedQuery, setLastSavedQuery] = useState("");
+  const isMounted = useRef(true);
 
-  // Fetch solo cuando hay texto en searchQuery
   useEffect(() => {
-    const fetchMovies = async () => {
-      // Si no hay búsqueda, no hacer nada
-      if (searchQuery === "") {
-        setMovies([]);
-        return;
-      }
-      
-      // Búsqueda con query
-      setLoading(true);
-      try {
-        const data = await fetchPopularMovies({ query: searchQuery });
-        setMovies(data);
-        setError(null);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      isMounted.current = false;
     };
+  }, []);
 
-    fetchMovies();
-  }, [searchQuery]); // Solo se ejecuta cuando searchQuery cambia
+  // Fetch con debounce cuando searchQuery cambia
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const fetchMovies = async () => {
+        if (searchQuery.trim() === "") {
+          if (isMounted.current) {
+            setMovies([]);
+          }
+          return;
+        }       
+  
+        if (isMounted.current) {
+          setLoading(true);
+        }
+        
+        try {
+          const data = await fetchPopularMovies({ query: searchQuery });
+          console.log("Películas recibidas:", data.length);
+          
+          if (isMounted.current) {
+            setMovies(data);
+            setError(null);
+          }
+        } catch (err) {
+          console.error("Error al buscar películas:", err);
+          if (isMounted.current) {
+            setError(err as Error);
+          }
+        } finally {
+          if (isMounted.current) {
+            setLoading(false);
+          }
+        }
+      };
+      fetchMovies();
+    }, 500);
 
-  const handleSearch = () => {
-    // Esto dispara el useEffect
-    setSearchQuery(searchQuery);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Guardar en Appwrite solo cuando se presiona Enter
+  const handleSearch = async () => {
+    const query = searchQuery.trim();
+    
+    // Actualizar el query que se muestra
+    setSubmittedQuery(query);
+    
+    if (query !== "" && movies.length > 0 && movies[0] && query !== lastSavedQuery) {
+      
+      try {
+        await updateSearchCount(query, movies[0]);
+        if (isMounted.current) {
+          setLastSavedQuery(query);
+        }
+      } catch (err) {
+        console.error("Error al guardar en la base de datos:", err);
+      }
+    }
   };
 
   return (
@@ -64,12 +103,12 @@ const search = () => {
       {/* Título dinámico */}
       <View className="px-5 mb-3">
         <Text className="text-lg text-white font-bold">
-          {searchQuery === "" ? (
+          {submittedQuery === "" ? (
             ""
           ) : (
             <>
               Resultados para:{" "}
-              <Text className="text-accent">{searchQuery.toUpperCase()}</Text>
+              <Text className="text-accent">{submittedQuery.toUpperCase()}</Text>
             </>
           )}
         </Text>
@@ -77,13 +116,10 @@ const search = () => {
 
       {loading ? (
         <ActivityIndicator size="large" color="#ab8bff" className="flex-1" />
-
       ) : error ? (
         <Text className="text-red-500 text-center px-5 my-3">
           Error: {error?.message}
         </Text>
-
-
       ) : searchQuery !== "" && movies.length === 0 ? (
         <View className="flex-1 justify-center items-center px-8 mb-32">
           <Image
@@ -96,17 +132,16 @@ const search = () => {
           </Text>
           <Text className="text-light-100 text-center text-base leading-6">
             No encontramos películas o series con{"\n"}
-            <Text className="text-accent font-semibold">"{searchQuery}"</Text>
+            <Text className="text-accent font-semibold">"{submittedQuery}"</Text>
           </Text>
           <Text className="text-light-200 text-center text-sm mt-4">
             Intenta con otro nombre
           </Text>
         </View>
-
       ) : searchQuery === "" ? (
         <View className="flex-1 justify-center items-center px-8">
           <Text className="text-light-100 text-center text-lg mb-32">
-            Escribe en la barra de busqueda para encontrar películas o series
+            Escribe en la barra de búsqueda para encontrar películas o series
           </Text>
         </View>
       ) : (
@@ -116,12 +151,16 @@ const search = () => {
           keyExtractor={(item) => item.id.toString()}
           className="px-5"
           numColumns={3}
+          key="movie-grid-3"
           columnWrapperStyle={{
             justifyContent: "center",
             gap: 16,
             marginVertical: 16,
           }}
           contentContainerStyle={{ paddingBottom: 100 }}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={9}
+          windowSize={5}
         />
       )}
     </View>
