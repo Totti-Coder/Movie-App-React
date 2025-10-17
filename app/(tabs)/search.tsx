@@ -38,6 +38,7 @@ const search = () => {
         }
         
         try {
+          //Busca las peliculas en la API
           const data = await fetchPopularMovies({ query: searchQuery });
           console.log("Películas recibidas:", data.length);
           
@@ -69,9 +70,11 @@ const search = () => {
     // Actualizar el query que se muestra
     setSubmittedQuery(query);
     
+    //Solo se guarda cuando le doy a Enter y confirmo la busqueda
     if (query !== "" && movies.length > 0 && movies[0] && query !== lastSavedQuery) {
       
       try {
+        // Guarda/Actualiza los datos en mi BBDD
         await updateSearchCount(query, movies[0]);
         if (isMounted.current) {
           setLastSavedQuery(query);
