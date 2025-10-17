@@ -94,7 +94,7 @@ const search = () => {
       />
       <Image source={icons.logo} className="w-10 h-10 mt-10 mb-5 mx-auto" />
 
-      <View className="px-5 pt-12 pb-4 mb-5">
+      <View className="px-5 pt-12 pb-4 mb-5 -mt-7">
         <SearchBar
           placeholder="Buscar películas..."
           value={searchQuery}
