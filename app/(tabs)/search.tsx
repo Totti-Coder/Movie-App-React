@@ -150,8 +150,9 @@ const search = () => {
       ) : (
         <FlatList
           data={movies}
-          renderItem={({ item }) => <MovieCard {...item} />}
+          renderItem={({ item }) => <MovieCard {...item} showFavoriteButton={true} />}
           keyExtractor={(item) => item.id.toString()}
+          
           className="px-5"
           numColumns={3}
           key="movie-grid-3"

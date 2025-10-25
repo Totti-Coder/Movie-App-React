@@ -3,15 +3,15 @@ import {
   Text,
   ScrollView,
   Image,
-  TouchableNativeFeedbackComponent,
   TouchableOpacity,
-} from "react-native"; // <-- ¡Añade Image aquí!
+} from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import useFetch from "@/services/useFetch";
 import { fetchMovieDetails } from "@/services/api";
 import { icons } from "@/constants/icons";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface MovieInfoProps {
   label: string;
@@ -26,11 +26,13 @@ const MovieInfo = ({ label, value }: MovieInfoProps) => (
     </Text>
   </SafeAreaView>
 );
+
 const MovieDetails = () => {
   const { id } = useLocalSearchParams();
   const { data: movie, loading } = useFetch(() =>
     fetchMovieDetails(id as string)
   );
+
   return (
     <SafeAreaView className="bg-primary flex-1">
       <ScrollView
@@ -38,7 +40,7 @@ const MovieDetails = () => {
           paddingBottom: 80,
         }}
       >
-        <SafeAreaView>
+        <SafeAreaView className="relative">
           <Image
             source={{
               uri: `https://image.tmdb.org/t/p/w500${movie?.poster_path}`,
@@ -46,7 +48,18 @@ const MovieDetails = () => {
             className="w-full h-[550px]"
             resizeMode="stretch"
           />
+          
+          {/* Botón de favoritos flotante sobre la imagen */}
+          {movie && (
+            <View className="absolute top-4 right-4">
+              <FavoriteButton
+                movie={movie}
+                size={28}
+              />
+            </View>
+          )}
         </SafeAreaView>
+
         <SafeAreaView className="flex-col items-start justify-center px-5">
           <Text className="text-white font-bold text-xl">{movie?.title}</Text>
           <View className="flex-row items-center gap-x-1 mt-2">
@@ -57,7 +70,7 @@ const MovieDetails = () => {
           </View>
 
           <View className="flex-row items-center bg-dark-100 px-2 py-1 rounded-md gap-x-1 mt-2">
-            <Image source={icons.star} className="size 4" />
+            <Image source={icons.star} className="size-4" />
             <Text className="text-white font-bold text-sm">
               {Math.round(movie?.vote_average ?? 0)}/10
             </Text>
@@ -65,6 +78,7 @@ const MovieDetails = () => {
               ({movie?.vote_count} votos)
             </Text>
           </View>
+
           <MovieInfo label="Resumen" value={movie?.overview} />
           <MovieInfo
             label="Generos"
