@@ -1,50 +1,65 @@
-# Welcome to your Expo app 👋
+# 🎬 Movie App React Native: Un Explorador de Películas
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este proyecto es una aplicación móvil construida con **React Native (Expo)** que permite a los usuarios explorar películas populares, ver detalles y guardar títulos en una lista de favoritos. El sistema de gestión de favoritos ha sido migrado de un almacenamiento local (AsyncStorage) a un *backend* en la nube: **Appwrite**, asegurando que los favoritos sean personales para cada usuario.
 
-## Get started
+## 🚀 Características Principales
 
-1. Install dependencies
+* **Exploración de Películas:** Muestra listados de películas usando la API de TMDB.
+* **Gestión de Favoritos:** Permite a los usuarios autenticados guardar, eliminar y consultar películas de su lista personal.
+* **Autenticación de Usuario:** Integración de inicio de sesión y registro mediante Appwrite.
+* **Persistencia en la Nube:** Uso de Appwrite para la persistencia de datos (favoritos) vinculados al `userId`.
+* **Estilo Moderno:** Utiliza **NativeWind** (Tailwind CSS for React Native) para un desarrollo de interfaz eficiente.
 
-   ```bash
-   npm install
-   ```
+***
 
-2. Start the app
+## 🛠️ Tecnologías Utilizadas
 
-   ```bash
-   npx expo start
-   ```
+* **Frontend:** React Native (Expo)
+* **Backend & DB:** [Appwrite Cloud](https://cloud.appwrite.io/) (Autenticación y Base de Datos)
+* **API Externa:** The Movie Database (TMDB)
+* **Estilo:** NativeWind
 
-In the output, you'll find options to open the app in a
+***
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## ☁️ Configuración del Backend (Appwrite)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Para que la gestión de favoritos funcione, debes configurar una Base de Datos y una Colección específica en tu proyecto de Appwrite.
 
-## Get a fresh project
+### 1. Base de Datos y Colección (`Favorites`)
 
-When you're ready, run:
+1.  Crea una Base de Datos (si aún no tienes una).
+2.  Crea una Colección (Tabla) dentro de esa Base de Datos. El **Collection ID** de esta tabla debe coincidir con el valor de la variable `EXPO_PUBLIC_APPWRITE_FAVORITES_ID`. (En nuestro caso, el ID es `'favorites'` o su código alfanumérico).
+
+#### A. Atributos (Columnas) Requeridos
+
+La colección de favoritos debe tener estos campos para que el servicio `favorites.ts` pueda guardar y leer los datos correctamente:
+
+| Nombre del Atributo | Tipo de Dato | Requerido | Propósito |
+| :--- | :--- | :--- | :--- |
+| **`user_id`** | String | Sí | ID del usuario logueado (CRUCIAL para el filtrado). |
+| **`movie_id`** | Integer | Sí | ID numérico de la película (TMDB). |
+| **`title`** | String | Sí | Título de la película. |
+| **`poster_url`** | String | No | URL completa del póster. |
+
+#### B. Permisos de la Colección
+
+Configura los permisos de la colección **`Favorites`** en la pestaña `Settings` para asegurar que solo los usuarios logueados puedan interactuar con ella:
+
+| Rol | Create | Read | Update | Delete |
+| :--- | :--- | :--- | :--- | :--- |
+| **Users** | ✅ | ✅ | ✅ | ✅ |
+| **Any** | ❌ | ❌ | ❌ | ❌ |
+
+> **Nota de Seguridad:** Es fundamental que el rol **`Any`** no tenga permisos de `Create` o `Read` para evitar el error de autorización cuando los usuarios anónimos visiten la pestaña "Guardados".
+
+***
+
+## ⚙️ Configuración Local del Proyecto
+
+### 1. Clonar e Instalar
 
 ```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+git clone [https://github.com/Totti-Coder/Movie-App-React.git](https://github.com/Totti-Coder/Movie-App-React.git)
+cd Movie-App-React
+npm install
+# o yarn install
