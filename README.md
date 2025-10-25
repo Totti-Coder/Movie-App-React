@@ -2,61 +2,86 @@
 
 Este proyecto es una aplicación móvil construida con **React Native (Expo)** que permite a los usuarios explorar películas populares, ver detalles y guardar títulos en una lista de favoritos. El sistema de gestión de favoritos ha sido migrado de un almacenamiento local (AsyncStorage) a un *backend* en la nube: **Appwrite**, asegurando que los favoritos sean personales para cada usuario.
 
-## 🚀 Características Principales
+---
 
-* **Exploración de Películas:** Muestra listados de películas usando la API de TMDB.
-* **Gestión de Favoritos:** Permite a los usuarios autenticados guardar, eliminar y consultar películas de su lista personal.
-* **Autenticación de Usuario:** Integración de inicio de sesión y registro mediante Appwrite.
-* **Persistencia en la Nube:** Uso de Appwrite para la persistencia de datos (favoritos) vinculados al `userId`.
-* **Estilo Moderno:** Utiliza **NativeWind** (Tailwind CSS for React Native) para un desarrollo de interfaz eficiente.
+## 🚀 1. Características Funcionales
 
-***
+| Característica | Descripción | Estado |
+| :--- | :--- | :--- |
+| **Búsqueda y Exploración** | Muestra listados dinámicos de películas populares y permite la navegación por colecciones de TMDB. | ✅ Implementado |
+| **Gestión de Favoritos** | Permite a los usuarios autenticados **Guardar, Listar y Eliminar** películas de su colección personal. | ✅ Implementado |
+| **Autenticación Segura** | Integración completa de los flujos de `Login`, `Registro` y `Gestión de Sesión` vía el SDK de Appwrite. | ✅ Implementado |
+| **Persistencia Sincronizada** | Los datos de favoritos se almacenan en la nube, garantizando su disponibilidad en cualquier dispositivo tras iniciar sesión. | ✅ Implementado |
+| **Estilo Adaptativo** | Diseño responsivo implementado mediante NativeWind (Tailwind CSS for React Native). | ✅ Implementado |
 
-## 🛠️ Tecnologías Utilizadas
+---
 
-* **Frontend:** React Native (Expo)
-* **Backend & DB:** [Appwrite Cloud](https://cloud.appwrite.io/) (Autenticación y Base de Datos)
-* **API Externa:** The Movie Database (TMDB)
-* **Estilo:** NativeWind
+## 🛠️ 2. Stack Tecnológico.
 
-***
+La aplicación se fundamenta en el **Stack MERN** simplificado con la inclusión de Expo y Appwrite como servicios desacoplados.
 
-## ☁️ Configuración del Backend (Appwrite)
-
-Para que la gestión de favoritos funcione, debes configurar una Base de Datos y una Colección específica en tu proyecto de Appwrite.
-
-### 1. Base de Datos y Colección (`Favorites`)
-
-1.  Crea una Base de Datos (si aún no tienes una).
-2.  Crea una Colección (Tabla) dentro de esa Base de Datos. El **Collection ID** de esta tabla debe coincidir con el valor de la variable `EXPO_PUBLIC_APPWRITE_FAVORITES_ID`. (En nuestro caso, el ID es `'favorites'` o su código alfanumérico).
-
-#### A. Atributos (Columnas) Requeridos
-
-La colección de favoritos debe tener estos campos para que el servicio `favorites.ts` pueda guardar y leer los datos correctamente:
-
-| Nombre del Atributo | Tipo de Dato | Requerido | Propósito |
+| Componente | Tecnología | Versión | Rol Principal |
 | :--- | :--- | :--- | :--- |
-| **`user_id`** | String | Sí | ID del usuario logueado (CRUCIAL para el filtrado). |
-| **`movie_id`** | Integer | Sí | ID numérico de la película (TMDB). |
-| **`title`** | String | Sí | Título de la película. |
-| **`poster_url`** | String | No | URL completa del póster. |
+| **Lenguaje** | **TypeScript** | Latest | Lenguaje principal de desarrollo, ofreciendo tipado estático para la robustez del código. |
+| **Frontend Core** | **React Native (Expo)** | Latest | Desarrollo de interfaz de usuario móvil multiplataforma. |
+| **Backend & BaaS** | **Appwrite Cloud** | v1.5+ | Autenticación, Base de Datos (NoSQL) y gestión de permisos. |
+| **API Externa** | **The Movie Database (TMDB)** | v3/v4 | Fuente de datos de películas (títulos, pósters, metadatos). |
+| **Estilo** | **NativeWind** | Latest | Utilidades para la aplicación de estilos de Tailwind CSS. |
+| **Navegación** | **React Navigation** | Latest | Gestión de la pila de navegación y pestañas (Tabs). |
 
-#### B. Permisos de la Colección
+---
 
-Configura los permisos de la colección **`Favorites`** en la pestaña `Settings` para asegurar que solo los usuarios logueados puedan interactuar con ella:
+## 🧠 3. Arquitectura y Diseño del Servicio
 
-| Rol | Create | Read | Update | Delete |
-| :--- | :--- | :--- | :--- | :--- |
-| **Users** | ✅ | ✅ | ✅ | ✅ |
-| **Any** | ❌ | ❌ | ❌ | ❌ |
+El diseño del servicio de favoritos se adhiere al principio de **Separación de Responsabilidades** (SoC), garantizando que la lógica de negocio y la interacción con la base de datos residan en la capa de servicios, desacoplada de los componentes de la interfaz de usuario.
 
-> **Nota de Seguridad:** Es fundamental que el rol **`Any`** no tenga permisos de `Create` o `Read` para evitar el error de autorización cuando los usuarios anónimos visiten la pestaña "Guardados".
+### Estructura Clave de la Migración
+1.  **Capa de Servicios (`src/services/favorites.ts`)**: Este archivo encapsula toda la interacción con el SDK de Appwrite. Las funciones (`saveMovieToUser`, `getFavorites`, `removeFromFavorites`) exigen el `userId` como parámetro para el filtrado, asegurando que las consultas sean atómicas y privadas.
+2.  **Estrategia de Seguridad en el Cliente (`src/app/(tabs)/saved.tsx`)**: Para prevenir errores de autorización (`AppwriteException`) cuando el usuario es **anónimo**, la pantalla de favoritos implementa una **Salida Rápida (Early Exit)**.
+    ```typescript
+    // En loadSavedMovies(userId)
+    if (!userId) {
+        // Establece estados a vacío y detiene la llamada a la base de datos
+        return; 
+    }
+    // ... Procede con la llamada a Appwrite solo si está logueado
+    ```
 
-***
+---
 
+## ☁️ 4. Configuración del Entorno de Desarrollo
+
+La configuración de variables de entorno y el *backend* es crítica para la funcionalidad y seguridad del proyecto.
+
+### 4.1. Configuración de Seguridad en Appwrite
+La colección **`Favorites`** debe tener los siguientes permisos configurados a nivel de colección para garantizar que la aplicación funcione correctamente y de forma segura:
+
+| Rol | Create | Read | Update | Delete | Justificación de Seguridad |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Users** | ✅ | ✅ | ✅ | ✅ | Permite la funcionalidad a usuarios autenticados. |
+| **Any** | ❌ | ❌ | ❌ | ❌ | Impide la inyección de datos (Creación) y la visualización de datos de usuario (Lectura) por parte de usuarios anónimos. |
+
+### 4.2. Variables de Entorno (`.env`)
+
+Se requiere un archivo `.env` en la raíz del proyecto para inicializar el cliente de Appwrite y las APIs. Asegúrese de que los **IDs sean correctos y no contengan espacios en blanco**.
+
+```env
+# TMDB API (Bearer Token)
+EXPO_PUBLIC_MOVIE_API_KEY=TU_API_KEY_DE_TMDB
+
+# Credenciales de Appwrite
+EXPO_PUBLIC_APPWRITE_PROJECT_ID=ID_DEL_PROYECTO
+EXPO_PUBLIC_APPWRITE_ENDPOINT=[https://cloud.appwrite.io/v1](https://cloud.appwrite.io/v1)
+
+# IDs de Base de Datos y Colecciones
+EXPO_PUBLIC_APPWRITE_DATABASE_ID=ID_DE_TU_BASE_DE_DATOS
+EXPO_PUBLIC_APPWRITE_TABLE_ID=ID_COLECCION_METRICAS (si aplica)
+EXPO_PUBLIC_APPWRITE_FAVORITES_ID=ID_DE_LA_COLECCION_FAVORITES (Ej: 'favorites' o alfanumérico)
+
+```
 ## ⚙️ Configuración Local del Proyecto
 
-### 1. Clonar e Instalar
+### Clonar e Instalar
 
 ```bash
 git clone [https://github.com/Totti-Coder/Movie-App-React.git](https://github.com/Totti-Coder/Movie-App-React.git)
